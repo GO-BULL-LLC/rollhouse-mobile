@@ -36,23 +36,20 @@ void main() {
     await settle(t, 6);
     await shot(t, '03_menu');
 
-    await t.tap(find.byType(InkWell).at(3));
+    // карточка товара
+    await t.tap(find.text('Катана').first);
     await settle(t, 4);
     await shot(t, '04_product');
     final add = find.textContaining('В корзину');
     if (add.evaluate().isNotEmpty) await t.tap(add.first);
     await settle(t, 1);
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.tap(find.byTooltip('Закрыть'));
     await settle(t, 1);
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
-    await settle(t, 2);
 
-    // пицца с выбором размера
-    await t.drag(find.byType(CustomScrollView).first, const Offset(0, 1400));
-    await settle(t, 2);
+    // пицца с выбором размера — вкладка «Пицца» на том же экране
     await t.tap(find.text('Пицца').first);
     await settle(t, 5);
-    await t.tap(find.byType(InkWell).at(2));
+    await t.tap(find.text('Пепперони').first);
     await settle(t, 4);
     final big = find.text('40 см');
     if (big.evaluate().isNotEmpty) await t.tap(big.first);
@@ -60,9 +57,9 @@ void main() {
     final add2 = find.textContaining('В корзину');
     if (add2.evaluate().isNotEmpty) await t.tap(add2.first);
     await settle(t, 1);
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.tap(find.byTooltip('Закрыть'));
     await settle(t, 1);
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.pageBack();
     await settle(t, 2);
 
     await t.tap(find.text('Корзина').last);
@@ -71,7 +68,7 @@ void main() {
     await t.tap(find.textContaining('Оформить').first);
     await settle(t, 4);
     await shot(t, '07_checkout');
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.pageBack();
     await settle(t, 1);
 
     await t.tap(find.text('Профиль').last);
