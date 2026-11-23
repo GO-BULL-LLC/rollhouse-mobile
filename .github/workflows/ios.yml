@@ -11,13 +11,15 @@ jobs:
   ios:
     runs-on: macos-15
     timeout-minutes: 45
-    env:
-      BUILD_NUMBER: ${{ github.run_number }}
     defaults:
       run:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+
+      # +10: в TestFlight уже есть сборки 1–6 из прежнего репозитория
+      - name: Build number
+        run: echo "BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 10))" >> "$GITHUB_ENV"
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
