@@ -1,0 +1,11 @@
+keys/
+output/
+*.apk
+*.aab
+mobile/build/
+mobile/.dart_tool/
+mobile/ios/Pods/
+mobile/ios/fastlane/AuthKey.p8
+mobile/ios/fastlane/report.xml
+mobile/android/local.properties
+mobile/android/.gradle/

@@ -1,0 +1,67 @@
+name: iOS → TestFlight
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Flutter deps + checks
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      # Podfile и pod install делает сам `flutter build ios` внутри fastlane.
+      - name: Restore App Store Connect API key
+        env:
+          ASC_KEY_B64: ${{ secrets.FASTLANE_ASC_KEY_BASE64 }}
+        run: echo "$ASC_KEY_B64" | base64 -d > ios/fastlane/AuthKey.p8
+
+      - name: Import Apple Distribution certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
+          p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          keychain: signing_temp
+
+      - name: Build & upload to TestFlight
+        working-directory: mobile/ios
+        env:
+          FASTLANE_ASC_KEY_ID: ${{ secrets.FASTLANE_ASC_KEY_ID }}
+          FASTLANE_ASC_ISSUER_ID: ${{ secrets.FASTLANE_ASC_ISSUER_ID }}
+        run: fastlane deploy
+
+      - name: Upload IPA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RollHouse-ios
+          path: output/RollHouse.ipa
+          if-no-files-found: warn

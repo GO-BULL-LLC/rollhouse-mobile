@@ -1,0 +1,47 @@
+default_platform :ios
+
+platform :ios do
+  # Сборка Flutter-приложения и выгрузка в TestFlight. Вызывается из .github/workflows/ios.yml.
+  lane :deploy do
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch('FASTLANE_ASC_KEY_ID'),
+      issuer_id: ENV.fetch('FASTLANE_ASC_ISSUER_ID'),
+      key_filepath: './fastlane/AuthKey.p8'
+    )
+
+    get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: 'ru.rollhous.app',
+      provisioning_name: 'RollHouseiOS',
+      ignore_profiles_with_different_name: true,
+      readonly: true
+    )
+
+    update_code_signing_settings(
+      path: 'Runner.xcodeproj',
+      use_automatic_signing: false,
+      targets: ['Runner'],
+      build_configurations: ['Release'],
+      team_id: '2X2469F2R8',
+      code_sign_identity: 'Apple Distribution',
+      profile_name: 'RollHouseiOS'
+    )
+
+    build_number = ENV.fetch('BUILD_NUMBER')
+    Dir.chdir('../..') do
+      sh('flutter', 'build', 'ios', '--release', '--no-codesign', "--build-number=#{build_number}")
+    end
+
+    build_app(
+      workspace: 'Runner.xcworkspace',
+      scheme: 'Runner',
+      configuration: 'Release',
+      export_method: 'app-store',
+      export_options: { provisioningProfiles: { 'ru.rollhous.app' => 'RollHouseiOS' } },
+      output_directory: '../../output',
+      output_name: 'RollHouse.ipa'
+    )
+
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+  end
+end
