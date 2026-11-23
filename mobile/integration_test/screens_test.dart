@@ -49,7 +49,7 @@ void main() {
     // пицца с выбором размера — вкладка «Пицца» на том же экране
     await t.tap(find.text('Пицца').first);
     await settle(t, 5);
-    await t.tap(find.text('Пепперони').first);
+    await t.tap(find.text('Салями').first);
     await settle(t, 4);
     final big = find.text('40 см');
     if (big.evaluate().isNotEmpty) await t.tap(big.first);
@@ -67,11 +67,26 @@ void main() {
 
     await t.tap(find.textContaining('Оформить').first);
     await settle(t, 4);
+    final pre = find.text('Ко времени');
+    if (pre.evaluate().isNotEmpty) {
+      await t.tap(pre.first);
+      await settle(t, 4);
+    }
     await shot(t, '07_checkout');
     await t.pageBack();
     await settle(t, 1);
 
     await t.tap(find.text('Профиль').last);
     await shot(t, '08_profile');
+
+    // подборка
+    await t.tap(find.text('Меню').last);
+    await settle(t, 2);
+    final col = find.text('Запечённые');
+    if (col.evaluate().isNotEmpty) {
+      await t.tap(col.first);
+      await settle(t, 6);
+      await shot(t, '09_collection');
+    }
   });
 }
