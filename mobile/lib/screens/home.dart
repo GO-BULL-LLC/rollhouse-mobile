@@ -56,6 +56,7 @@ class HomeScreen extends StatelessWidget {
           if (!cfg.isOpenNow && cfg.closedText.isNotEmpty)
             SliverToBoxAdapter(child: _Strip(text: cfg.closedText, color: RH.surface2, icon: Icons.schedule_rounded)),
           if (cfg.banners.isNotEmpty) SliverToBoxAdapter(child: BannerCarousel(banners: cfg.banners)),
+          if (store.orders.isNotEmpty) SliverToBoxAdapter(child: _RepeatLast(order: store.orders.first)),
           if (cfg.collections.isNotEmpty) ...[
             const SliverToBoxAdapter(child: SectionTitle('Подборки')),
             SliverToBoxAdapter(child: CollectionsStrip(items: cfg.collections)),
@@ -144,6 +145,52 @@ class CartFab extends StatelessWidget {
   }
 }
 
+/// Быстрый повтор последнего заказа.
+class _RepeatLast extends StatelessWidget {
+  final PastOrder order;
+  const _RepeatLast({required this.order});
+  @override
+  Widget build(BuildContext context) {
+    final store = StoreScope.read(context);
+    final names = order.lines.map((l) => l.title).join(', ');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Material(
+        color: RH.surface,
+        borderRadius: BorderRadius.circular(RH.radius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            final missed = store.repeat(order);
+            HapticFeedback.lightImpact();
+            toast(context, missed == 0 ? 'Добавили в корзину' : 'Добавили в корзину. $missed поз. больше нет в меню');
+            store.tab.value = 1;
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: NetImg(order.lines.isEmpty ? '' : order.lines.first.image, width: 56, height: 56, bg: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Повторить прошлый заказ', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(names, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: RH.muted, fontSize: 13)),
+                ]),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.replay_rounded, color: RH.red),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Strip extends StatelessWidget {
   final String text;
   final Color color;
@@ -171,26 +218,23 @@ class _CategoryTile extends StatelessWidget {
   const _CategoryTile({required this.category});
   @override
   Widget build(BuildContext context) {
+    // Обложки — на белом фоне, как фото блюд в меню: светлая карточка, тёмный текст сверху.
     return Material(
-      color: RH.surface,
+      color: Colors.white,
       borderRadius: BorderRadius.circular(RH.radius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => openCategory(context, category.id),
         child: Stack(fit: StackFit.expand, children: [
-          NetImg(category.image.isNotEmpty ? category.image : (category.products.first.image)),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Color(0xCC000000)], stops: [0.35, 1]),
-            ),
-          ),
+          NetImg(category.image.isNotEmpty ? category.image : (category.products.first.image), bg: Colors.white),
           Positioned(
             left: 12,
             right: 12,
-            bottom: 10,
+            top: 10,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(category.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
-              Text('${category.products.length} поз.', style: const TextStyle(fontSize: 12, color: Color(0xFFE0D8CC))),
+              Text(category.name, maxLines: 2, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: RH.ink, height: 1.15)),
+              const SizedBox(height: 2),
+              Text('${category.products.length} поз.', style: const TextStyle(fontSize: 12, color: RH.inkMuted, fontWeight: FontWeight.w600)),
             ]),
           ),
         ]),

@@ -25,10 +25,10 @@ class CollectionScreen extends StatelessWidget {
               ? null
               : FlexibleSpaceBar(
                   background: Stack(fit: StackFit.expand, children: [
-                    NetImg(collection.image),
+                    ColoredBox(color: Colors.white, child: Padding(padding: const EdgeInsets.only(top: 40), child: NetImg(collection.image, fit: BoxFit.contain, bg: Colors.white))),
                     const DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x66000000), Colors.transparent, RH.bg], stops: [0, 0.4, 1]),
+                        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x99000000), Colors.transparent, Colors.transparent, RH.bg], stops: [0, 0.3, 0.8, 1]),
                       ),
                     ),
                   ]),
@@ -65,26 +65,24 @@ class CollectionsStrip extends StatelessWidget {
           return SizedBox(
             width: 160,
             child: Material(
-              color: RH.surface,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(RH.radius),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CollectionScreen(collection: col))),
                 child: Stack(fit: StackFit.expand, children: [
-                  NetImg(col.image),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Color(0xD9000000)], stops: [0.45, 1]),
-                    ),
-                  ),
+                  NetImg(col.image, bg: Colors.white),
                   Positioned(
                     left: 12,
                     right: 12,
-                    bottom: 12,
+                    top: 12,
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(col.title, maxLines: 2, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15)),
+                      Text(col.title, maxLines: 2, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: RH.ink, height: 1.15)),
                       if (col.subtitle.isNotEmpty)
-                        Text(col.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xFFE0D8CC))),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Text(col.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: RH.inkMuted, height: 1.25)),
+                        ),
                     ]),
                   ),
                 ]),

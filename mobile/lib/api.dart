@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'models.dart';
 
 const kBase = 'https://rollhous.ru';
-const kAppVersion = '1.3';
+const kAppVersion = '1.4.0';
 
 String get userAgent => 'RollHouseApp/$kAppVersion (${Platform.isIOS ? 'iOS' : 'Android'})';
 

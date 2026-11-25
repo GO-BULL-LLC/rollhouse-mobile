@@ -10,16 +10,17 @@ class NetImg extends StatelessWidget {
   final String url;
   final BoxFit fit;
   final double? width, height;
-  const NetImg(this.url, {super.key, this.fit = BoxFit.cover, this.width, this.height});
+  final Color? bg;
+  const NetImg(this.url, {super.key, this.fit = BoxFit.cover, this.width, this.height, this.bg});
 
   @override
   Widget build(BuildContext context) {
     final ph = Container(
       width: width,
       height: height,
-      color: RH.surface2,
+      color: bg ?? RH.surface2,
       alignment: Alignment.center,
-      child: const Icon(Icons.restaurant_rounded, color: RH.line, size: 32),
+      child: Icon(Icons.restaurant_rounded, color: bg != null ? const Color(0xFFE6E0D8) : RH.line, size: 32),
     );
     if (url.isEmpty) return ph;
     return CachedNetworkImage(

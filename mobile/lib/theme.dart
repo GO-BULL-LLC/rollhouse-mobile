@@ -11,6 +11,9 @@ class RH {
   static const muted = Color(0xFFA59C90);
   static const green = Color(0xFF3DBE74);
   static const radius = 18.0;
+  /// Текст на светлых карточках.
+  static const ink = Color(0xFF1B1714);
+  static const inkMuted = Color(0xFF7A7067);
 }
 
 ThemeData buildTheme() {

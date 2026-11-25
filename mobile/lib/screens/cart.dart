@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models.dart';
 import '../store.dart';
@@ -71,7 +72,22 @@ class _CartScreenState extends State<CartScreen> {
       body: store.cart.isEmpty
           ? _Empty(onGoMenu: widget.standalone ? () => Navigator.pop(context) : widget.onGoMenu)
           : ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 120), children: [
+              _FreeDelivery(),
               for (final l in store.cart) _Line(key: ValueKey(l.key), line: l),
+              if (store.upsell.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('Добавить к заказу', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 178,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: store.upsell.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (c, i) => _UpsellCard(product: store.upsell[i]),
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               if (store.promoCode == null)
                 Row(children: [
@@ -184,6 +200,96 @@ class _Line extends StatelessWidget {
           ]),
         ),
       ]),
+    );
+  }
+}
+
+/// «До бесплатной доставки осталось …» — по району из прошлого заказа.
+class _FreeDelivery extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final store = StoreScope.of(context);
+    final d = store.savedDistrict;
+    final from = d?.freeFrom;
+    if (d == null || d.isPickup || from == null || from <= 0 || d.fee == 0) return const SizedBox.shrink();
+    final total = store.totalNoDelivery;
+    final left = from - total;
+    final done = left <= 0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(color: RH.surface, borderRadius: BorderRadius.circular(14)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(done ? Icons.check_circle_rounded : Icons.delivery_dining_rounded, color: done ? RH.green : RH.gold, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              done ? 'Доставка в ${d.name} — бесплатно' : 'Ещё ${rub(left)} до бесплатной доставки в ${d.name}',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: (total / from).clamp(0, 1).toDouble(),
+            minHeight: 6,
+            backgroundColor: RH.surface2,
+            color: done ? RH.green : RH.gold,
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _UpsellCard extends StatelessWidget {
+  final Product product;
+  const _UpsellCard({required this.product});
+  @override
+  Widget build(BuildContext context) {
+    final store = StoreScope.of(context);
+    return SizedBox(
+      width: 120,
+      child: Material(
+        color: RH.surface,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => openProduct(context, product),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            SizedBox(height: 84, child: NetImg(product.image, bg: Colors.white)),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                child: Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.2)),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+              child: SizedBox(
+                height: 34,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 34),
+                    padding: EdgeInsets.zero,
+                    backgroundColor: RH.surface2,
+                    foregroundColor: RH.text,
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    store.add(product);
+                  },
+                  child: Text('+ ${rub(product.price)}'),
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
     );
   }
 }

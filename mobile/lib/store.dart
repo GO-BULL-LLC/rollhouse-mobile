@@ -135,11 +135,33 @@ class AppStore extends ChangeNotifier {
   List<Product> get hits => productsByIds(config?.hits ?? const []);
   List<Product> productsByIds(List<String> ids) => [for (final id in ids) if (_byId[id] != null) _byId[id]!];
 
+  static String _norm(String s) => s.toLowerCase().replaceAll('ё', 'е');
+
+  /// Поиск по всем словам запроса; совпадения в названии — выше.
   List<Product> search(String q) {
-    final s = q.trim().toLowerCase();
-    if (s.length < 2) return const [];
-    return _byId.values.where((p) => p.name.toLowerCase().contains(s) || p.description.toLowerCase().contains(s)).toList();
+    final words = _norm(q).split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (words.join().length < 2) return const [];
+    final inName = <Product>[], inDesc = <Product>[];
+    for (final p in _byId.values) {
+      final n = _norm(p.name), d = _norm(p.description);
+      if (words.every(n.contains)) {
+        inName.add(p);
+      } else if (words.every((w) => n.contains(w) || d.contains(w))) {
+        inDesc.add(p);
+      }
+    }
+    return [...inName, ...inDesc];
   }
+
+  /// Допы к заказу (соусы, напитки) — категория «Дополнительно», без того, что уже в корзине.
+  List<Product> get upsell {
+    final c = categories.where((c) => c.name.toLowerCase().startsWith('дополн')).firstOrNull;
+    if (c == null) return const [];
+    return c.products.where((p) => !p.hasVariants && qtyOf(p.id) == 0).take(12).toList();
+  }
+
+  /// Район из профиля (для подсказки о бесплатной доставке в корзине).
+  District? get savedDistrict => districtById(profile.districtId);
 
   // ---------- корзина ----------
   /// Количество товара в корзине (все размеры) или конкретного размера.
