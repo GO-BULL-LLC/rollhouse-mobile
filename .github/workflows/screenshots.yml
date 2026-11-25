@@ -34,11 +34,16 @@ jobs:
           echo "UDID=$UDID" >> $GITHUB_ENV
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
+          open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+          sleep 10
           xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
       - name: Capture
-        run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/screens_test.dart -d "$UDID"
+        timeout-minutes: 18
+        run: flutter drive --no-pub --driver=test_driver/integration_test.dart --target=integration_test/screens_test.dart -d "$UDID" 2>&1 | tee drive.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: screenshots
-          path: mobile/screenshots/*.png
+          path: |
+            mobile/screenshots/*.png
+            mobile/drive.log
